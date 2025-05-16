@@ -1,0 +1,25 @@
+# Ignore everything by default
+*
+
+# Allow these files/directories
+!Dockerfile
+!docker-compose.yml
+!spot_interrupt_alert.py
+!.env  # Optional: Include if you use it
+
+# Exclude common noise
+.git/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+.vscode/
+.idea/
+
+*.key
+
+*.zip
+*.tar

@@ -1,0 +1,9 @@
+services:
+  aws-interrupt-monitor:
+    build: .
+    environment:
+      - NTFY_TOPIC=${NTFY_TOPIC}
+      - NTFY_SERVER=${NTFY_SERVER}
+      - NTFY_SECRET=${NTFY_SECRET}
+      - POLL_INTERVAL=${POLL_INTERVAL}
+    restart: unless-stopped

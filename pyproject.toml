@@ -1,0 +1,9 @@
+[project]
+name = "aws-interrupt-monitor"
+version = "0.1.0"
+description = "Monitor AWS EC2 instances for interruptions"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "requests>=2.32.3",
+]
