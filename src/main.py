@@ -21,7 +21,7 @@ def check_spot_interruption():
         pass
     return None
 
-def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, priority: str = "high") -> int:
+def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, priority: str = "high", tags: list[str] = ["cursing_face"]) -> int:
     """
     Sends a notification via ntfy service using a POST request.
 
@@ -35,10 +35,10 @@ def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, prio
     Returns:
         int: The HTTP response status code from the POST request.
     """
-
+    xtags = ",".join(tags)
     # Define the headers for the POST request
     headers = {
-        "X-Tags": "warning, cursing_face",
+        "X-Tags": xtags,
         "Title": "AWS Spot Instance Interruption Alert",
         "Authorization": f"Bearer {secret}",
         "Markdown": "yes",
@@ -56,6 +56,10 @@ def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, prio
 def main():
     print(f"Starting Spot Instance interruption monitor (Polling every {POLL_INTERVAL} seconds)...")
     print(f"NTFY Server: {NTFY_SERVER}, Topic: {NTFY_TOPIC}")
+
+    message = f"Starting spot instance interruption monitor. We will poll every {POLL_INTERVAL} seconds."
+    send_ntfy_alert(message=message, secret=NTFY_SECRET, url=f"{NTFY_SERVER}/{NTFY_TOPIC}", tags=["desktop_computer"])
+
     while True:
         interruption_data = check_spot_interruption()
         if interruption_data:
