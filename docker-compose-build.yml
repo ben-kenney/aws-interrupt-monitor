@@ -1,11 +1,9 @@
 services:
   aws-interrupt-monitor:
-    image: bak7/aws-interrupt-monitor:latest
-    container_name: aws-interrupt-monitor
-    restart: unless-stopped
+    build: .
     environment:
       - NTFY_TOPIC=${NTFY_TOPIC}
       - NTFY_SERVER=${NTFY_SERVER}
       - NTFY_SECRET=${NTFY_SECRET}
       - POLL_INTERVAL=${POLL_INTERVAL}
-      - VM_HOSTNAME=${VM_HOSTNAME}
+    restart: unless-stopped
