@@ -32,3 +32,10 @@ then
 ```bash
 git clone https://github.com/ben-kenney/aws-interrupt-monitor.git && cp .env aws-interrupt-monitor/ && cd aws-interrupt-monitor && VM_HOSTNAME=$(hostname) docker compose up -d
 ```
+
+## Build instructions:
+
+```
+docker build -t bak7/aws-interrupt-monitor .
+docker push bak7/aws-interrupt-monitor:latest
+```
