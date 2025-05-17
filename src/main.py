@@ -1,8 +1,9 @@
-import os
-import requests
-import time
 import json
+import os
 import socket
+import time
+
+import requests
 
 # Read configuration from environment variables
 NTFY_TOPIC = os.getenv("NTFY_TOPIC", "your_ntfy_topic")  # Default fallback if not set
@@ -11,19 +12,49 @@ NTFY_SECRET = os.getenv("NTFY_SECRET", "1234")  # Default fallback if not set
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "60"))  # Default: 60 seconds
 VM_HOSTNAME = os.getenv("VM_HOSTNAME") or socket.gethostname()
 
+
+def get_imdsv2_token():
+    """Fetch an IMDSv2 token with a 6-hour TTL."""
+    try:
+        response = requests.put(
+            "http://169.254.169.254/latest/api/token",
+            headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"},
+            timeout=2,
+        )
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.RequestException:
+        return None
+
+
 def check_spot_interruption():
-    """Check for Spot Instance interruption notice."""
+    """Check for Spot Instance interruption notice using IMDSv2."""
+    token = get_imdsv2_token()
+    if not token:
+        return None
+
     metadata_url = "http://169.254.169.254/latest/meta-data/spot/instance-action"
     try:
-        response = requests.get(metadata_url, timeout=2)
+        response = requests.get(
+            metadata_url, headers={"X-aws-ec2-metadata-token": token}, timeout=2
+        )
         if response.status_code == 200:
-            data = json.loads(response.text)
-            return data  # Return the interruption details
+            return json.loads(response.text)
+        elif response.status_code == 404:
+            return None  # No interruption notice
     except requests.exceptions.RequestException:
         pass
     return None
 
-def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, priority: str = "high", tags: list[str] = ["cursing_face"]) -> int:
+
+def send_ntfy_alert(
+    message: str,
+    secret: str,
+    url: str,
+    timeout: int = 10,
+    priority: str = "high",
+    tags: list[str] = ["cursing_face"],
+) -> int:
     """
     Sends a notification via ntfy service using a POST request.
 
@@ -54,13 +85,19 @@ def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, prio
     return response.status_code
 
 
-
 def main():
-    print(f"Starting Spot Instance interruption monitor (Polling every {POLL_INTERVAL} seconds)...")
+    print(
+        f"Starting Spot Instance interruption monitor (Polling every {POLL_INTERVAL} seconds)..."
+    )
     print(f"NTFY Server: {NTFY_SERVER}, Topic: {NTFY_TOPIC}")
 
     message = f"Starting spot instance interruption monitor. We will poll every {POLL_INTERVAL} seconds."
-    send_ntfy_alert(message=message, secret=NTFY_SECRET, url=f"{NTFY_SERVER}/{NTFY_TOPIC}", tags=["desktop_computer"])
+    send_ntfy_alert(
+        message=message,
+        secret=NTFY_SECRET,
+        url=f"{NTFY_SERVER}/{NTFY_TOPIC}",
+        tags=["desktop_computer"],
+    )
 
     while True:
         interruption_data = check_spot_interruption()
@@ -71,7 +108,9 @@ def main():
                 f"Time: {interruption_data['time']}"
             )
             print(message)
-            send_ntfy_alert(message, secret=NTFY_SECRET, url=f"{NTFY_SERVER}/{NTFY_TOPIC}")
+            send_ntfy_alert(
+                message, secret=NTFY_SECRET, url=f"{NTFY_SERVER}/{NTFY_TOPIC}"
+            )
             break  # Exit after sending the alert
         time.sleep(POLL_INTERVAL)
 
