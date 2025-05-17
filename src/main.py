@@ -2,12 +2,14 @@ import os
 import requests
 import time
 import json
+import socket
 
 # Read configuration from environment variables
 NTFY_TOPIC = os.getenv("NTFY_TOPIC", "your_ntfy_topic")  # Default fallback if not set
 NTFY_SERVER = os.getenv("NTFY_SERVER", "https://ntfy.sh")  # Default fallback if not set
 NTFY_SECRET = os.getenv("NTFY_SECRET", "1234")  # Default fallback if not set
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "60"))  # Default: 60 seconds
+VM_HOSTNAME = os.getenv("VM_HOSTNAME") or socket.gethostname()
 
 def check_spot_interruption():
     """Check for Spot Instance interruption notice."""
@@ -39,7 +41,7 @@ def send_ntfy_alert(message: str, secret: str, url: str, timeout: int = 10, prio
     # Define the headers for the POST request
     headers = {
         "X-Tags": xtags,
-        "Title": "AWS Spot Instance Interruption Alert",
+        "Title": f"AWS Spot Instance Interruption Alert ({VM_HOSTNAME})",
         "Authorization": f"Bearer {secret}",
         "Markdown": "yes",
         "Priority": priority,
